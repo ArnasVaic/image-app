@@ -1,27 +1,49 @@
-using image_app.Components;
+using image_app.Data;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<ImageRepository>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+    });
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
 
-app.UseAntiforgery();
+var group = app.MapGroup("images").WithName("Images");
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapPost("/upload", async (
+    [FromServices] ImageRepository images, 
+    [FromForm] string name,
+    IFormFile file) =>
+{
+    using MemoryStream ms = new();
+    file.CopyTo(ms);
+    var id = await images.AddAsync(name, ms.ToArray());
+    return Results.Ok(new { id });
+}).DisableAntiforgery();
+
+app.MapGet("/metadata", async ([FromServices] ImageRepository images) =>
+{
+    return await images.GetMetadataAsync();
+}).DisableAntiforgery();
+
+app.MapDelete("/delete/{id:guid}", async ([FromServices] ImageRepository images, [FromRoute] Guid id) =>
+{
+    await images.DeleteAsync(id);
+    return Results.NoContent();
+}).DisableAntiforgery();
 
 app.Run();

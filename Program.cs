@@ -8,6 +8,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ImageRepository>();
 
+builder.Configuration
+    .AddJsonFile("/etc/secrets/appsettings.json", optional: true, reloadOnChange: true);
+
 var port = Environment.GetEnvironmentVariable("PORT");
 
 if (string.IsNullOrEmpty(port))
@@ -32,7 +35,10 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
 });
 
-//app.UseHttpsRedirection();
+if (builder.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 var group = app.MapGroup("images").WithName("Images");
 

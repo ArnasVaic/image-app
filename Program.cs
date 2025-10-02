@@ -1,4 +1,4 @@
-using image_app.Data;
+﻿using image_app.Data;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +8,23 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ImageRepository>();
 
+var port = Environment.GetEnvironmentVariable("PORT");
+
+if (string.IsNullOrEmpty(port))
+{
+    Console.WriteLine("⚠️  No PORT environment variable found. Falling back to 8080.");
+    port = "8080";
+}
+else
+{
+    Console.WriteLine($"✅ Found PORT environment variable: {port}");
+}
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(int.Parse(port));
+});
+
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -15,7 +32,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
 });
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 var group = app.MapGroup("images").WithName("Images");
 

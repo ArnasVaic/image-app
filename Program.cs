@@ -11,6 +11,15 @@ builder.Services.AddScoped<ImageRepository>();
 builder.Configuration
     .AddJsonFile("/etc/secrets/appsettings.json", optional: true, reloadOnChange: true);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
 var port = Environment.GetEnvironmentVariable("PORT");
 
 if (string.IsNullOrEmpty(port))

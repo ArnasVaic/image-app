@@ -24,7 +24,7 @@ public class ImageRepository(IConfiguration config)
     {
         using var connection = GetConnection();
         return await connection.QueryFirstAsync<Image>(
-            $"SELECT \"id\", \"name\", \"createdAt\" FROM public.\"Images\" WHERE \"id\"=@Id",
+            $"SELECT \"id\", \"name\", \"createdAt\", \"data\" FROM public.\"Images\" WHERE \"id\"=@Id",
             new { id }
         );
     }

@@ -58,6 +58,12 @@ app.MapGet("/metadata", async ([FromServices] ImageRepository images) =>
     return await images.GetMetadataAsync();
 }).DisableAntiforgery();
 
+app.MapGet("/download", async ([FromServices] ImageRepository images, [FromQuery] Guid id) =>
+{
+    var image = await images.GetByIdAsync(id);
+    return Results.File(image.Data!, "application/octet-stream", image.Name);
+}).DisableAntiforgery();
+
 app.MapDelete("/delete/{id:guid}", async ([FromServices] ImageRepository images, [FromRoute] Guid id) =>
 {
     await images.DeleteAsync(id);

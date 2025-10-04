@@ -38,6 +38,9 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+app.UseCors("AllowAll"); // or "FrontendOnly" if you restricted
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {

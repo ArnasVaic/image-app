@@ -17,9 +17,9 @@ WORKDIR /app
 # Copy the published output from build stage
 COPY --from=build /app ./
 
-# Expose the port the app listens on
-EXPOSE 5000
-EXPOSE 5001
+# Cloud Run expects port 8080
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
 
 # Entry point
 ENTRYPOINT ["dotnet", "image-app.dll"]

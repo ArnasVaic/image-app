@@ -1,5 +1,8 @@
-﻿using image_app.Data;
+﻿using Dapper;
+using image_app.Data;
+using image_app.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,9 +11,6 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ImageRepository>();
 
-builder.Configuration
-    .AddJsonFile("/etc/secrets/appsettings.json", optional: true, reloadOnChange: true);
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -18,23 +18,6 @@ builder.Services.AddCors(options =>
             .AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader());
-});
-
-var port = Environment.GetEnvironmentVariable("PORT");
-
-if (string.IsNullOrEmpty(port))
-{
-    Console.WriteLine("⚠️  No PORT environment variable found. Falling back to 8080.");
-    port = "8080";
-}
-else
-{
-    Console.WriteLine($"✅ Found PORT environment variable: {port}");
-}
-
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(int.Parse(port));
 });
 
 var app = builder.Build();
@@ -51,6 +34,8 @@ if (builder.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseDeveloperExceptionPage();
 
 var group = app.MapGroup("images").WithName("Images");
 
@@ -81,5 +66,21 @@ app.MapDelete("/delete/{id:guid}", async ([FromServices] ImageRepository images,
     await images.DeleteAsync(id);
     return Results.NoContent();
 }).DisableAntiforgery();
+
+app.MapGet("/my-endpoint", async (HttpContext http, IConfiguration config) =>
+{
+    var connStr = config.GetConnectionString("DefaultConnection");
+    try
+    {
+        using var conn = new Npgsql.NpgsqlConnection(connStr);
+        var result = await conn.QueryAsync<Image>("SELECT id FROM public.\"Images\"");
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Endpoint /my-endpoint failed: {ex}");
+        return Results.Problem(ex.Message);
+    }
+});
 
 app.Run();

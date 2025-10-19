@@ -2,7 +2,6 @@
 using image_app.Data;
 using image_app.Models;
 using Microsoft.AspNetCore.Mvc;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +18,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var app = builder.Build();
 
